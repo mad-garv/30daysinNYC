@@ -82,7 +82,7 @@ function renderActivities(activities) {
 
         checkbox.addEventListener("change", async () => {
             const saved = await updateActivity(activity.id, checkbox.checked);
-        
+
             if (saved && checkbox.checked) {
                 openImageChoice(activity.id);
             }
@@ -122,6 +122,30 @@ async function updateActivity(id, completed) {
     return true;
 }
 
+async function uploadImageFile(activityId, file) {
+    const { data: sessionData } = await db.auth.getSession();
+
+    const userId = sessionData.session.user.id;
+    const extension = file.name.split(".").pop();
+    const filePath = `${userId}/${activityId}-${Date.now()}.${extension}`;
+
+    const { error: uploadError } = await db.storage
+        .from("activity-images")
+        .upload(filePath, file);
+
+    if (uploadError) {
+        console.error("Error uploading image:", uploadError);
+        alert(`Could not upload image: ${uploadError.message}`);
+        return null;
+    }
+
+    const { data } = db.storage
+        .from("activity-images")
+        .getPublicUrl(filePath);
+
+    return data.publicUrl;
+}
+
 function openEditPopup(activity) {
     const popup = document.createElement("div");
 
@@ -153,7 +177,32 @@ function openEditPopup(activity) {
                     id="edit-date"
                     value="${activity.completed_date || ""}"
                 >
-            </label>            
+            </label>         
+            
+            <label>
+                Change photo
+                <input
+                    type="file"
+                    id="edit-image"
+                    accept="image/*"
+                >
+            </label>
+
+            ${activity.image_url
+            ? `
+                        <img
+                            class="edit-image-preview"
+                            src="${activity.image_url}"
+                            alt="${activity.title}"
+                        >
+
+                        <label class="remove-image-label">
+                            <input type="checkbox" id="remove-image">
+                            Remove current photo
+                        </label>
+                    `
+            : ""
+        }
 
             <div class="edit-popup-buttons">
                 <button class="cancel-edit">Cancel</button>
@@ -172,6 +221,22 @@ function openEditPopup(activity) {
         const title = popup.querySelector("#edit-title").value;
         const description = popup.querySelector("#edit-description").value;
         const completedDate = popup.querySelector("#edit-date").value;
+        const imageFile = popup.querySelector("#edit-image").files[0];
+        const removeImage = popup.querySelector("#remove-image")?.checked;
+
+        let imageUrl = activity.image_url;
+
+        if (removeImage) {
+            imageUrl = null;
+        }
+
+        if (imageFile) {
+            imageUrl = await uploadImageFile(activity.id, imageFile);
+
+            if (!imageUrl) {
+                return;
+            }
+        }
 
         const { error } = await db
             .from("activities")
@@ -179,7 +244,8 @@ function openEditPopup(activity) {
                 title: title.trim(),
                 description: description.trim(),
                 completed: Boolean(completedDate),
-                completed_date: completedDate || null
+                completed_date: completedDate || null,
+                image_url: imageUrl
             })
             .eq("id", activity.id);
 
