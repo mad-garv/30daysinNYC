@@ -101,46 +101,16 @@ function renderActivities(activities) {
 }
 
 async function updateActivity(id, completed) {
-    let updates;
-
-    if (completed) {
-        const { data, error } = await db
-            .from("activities")
-            .select("journey_order")
-            .not("journey_order", "is", null)
-            .order("journey_order", { ascending: false })
-            .limit(1);
-
-        if (error) {
-            console.error("Error finding next journey card:", error);
-            return false;
-        }
-
-        const nextJourneyOrder = data.length
-            ? data[0].journey_order + 1
-            : 1;
-
-        if (nextJourneyOrder > 30) {
-            alert("Your 30-day journey is already full!");
-            return false;
-        }
-
-        updates = {
-            completed: true,
-            completed_date: new Date().toISOString().split("T")[0],
-            journey_order: nextJourneyOrder
-        };
-    } else {
-        updates = {
-            completed: false,
-            completed_date: null,
-            journey_order: null
-        };
-    }
+    const completedDate = completed
+        ? new Date().toISOString().split("T")[0]
+        : null;
 
     const { error } = await db
         .from("activities")
-        .update(updates)
+        .update({
+            completed: completed,
+            completed_date: completedDate
+        })
         .eq("id", id);
 
     if (error) {
