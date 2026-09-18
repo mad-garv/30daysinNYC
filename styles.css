@@ -440,47 +440,31 @@ nav a:hover {
     }
 }
 
-/* Journey: full-screen NYC photo wall */
+/* Journey grid */
 
-.journey-page {
-    padding: 22px 0 0;
-    background:
-        linear-gradient(rgba(32, 37, 67, 0.22), rgba(32, 37, 67, 0.22)),
-        url("images/nyc-landscape.jpg") center / cover fixed;
-}
-
-.journey-page main {
-    width: min(940px, calc(100% - 30px));
-    margin: 0 auto;
-}
-
-.journey-page nav {
-    margin-bottom: 22px;
-    background: rgba(255, 253, 249, 0.5);
-    backdrop-filter: blur(8px);
-}
-
-.journey-page #journey-calendar {
+#journey-calendar {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    width: 100vw;
-    margin: 0 calc(50% - 50vw);
-    gap: 0;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
 }
 
-.journey-page .calendar-day {
+.calendar-day {
     position: relative;
-    min-height: 220px;
+    min-height: 175px;
     overflow: hidden;
-    border: 0;
-    border-radius: 0;
-    background: rgba(248, 244, 237, 0.14);
-    box-shadow: inset 0 0 0 1px #111;
+    border: 1px solid var(--ink);
+    border-radius: 16px;
+    background: var(--card);
+    transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
-.journey-page .calendar-number {
+.calendar-day:hover {
+    box-shadow: 0 10px 22px rgba(32, 37, 67, 0.16);
+    transform: translateY(-3px);
+}
+
+.calendar-number {
     position: absolute;
-    z-index: 3;
     inset: 0;
     display: grid;
     place-items: center;
@@ -488,45 +472,39 @@ nav a:hover {
     font-family: "DM Serif Display", Georgia, serif;
     font-size: clamp(4.5rem, 9vw, 8rem);
     line-height: 1;
-    pointer-events: none;
-    opacity: 0.06;
-    transition: opacity 250ms ease;
+    opacity: 0.65;
 }
 
-.journey-page .calendar-content {
+.calendar-content {
     position: absolute;
-    z-index: 2;
     inset: 0;
 }
 
-.journey-page .calendar-content img {
+.calendar-content img {
     display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.journey-page .image-placeholder {
+.image-placeholder {
     display: grid;
     width: 100%;
     height: 100%;
     place-items: center;
     color: var(--blue);
-    background: rgba(248, 244, 237, 0.12);
+    background: rgba(167, 198, 232, 0.25);
     font-family: "DM Serif Display", Georgia, serif;
     font-size: clamp(5rem, 11vw, 10rem);
-    line-height: 1;
-    backdrop-filter: blur(2px);
 }
 
-.journey-page .calendar-title {
+.calendar-title {
     position: absolute;
-    z-index: 4;
-    right: 12px;
-    bottom: 12px;
-    left: 12px;
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
     margin: 0;
-    padding: 9px 11px;
+    padding: 8px 10px;
     border-radius: 8px;
     color: white;
     background: rgba(32, 37, 67, 0.8);
@@ -538,26 +516,17 @@ nav a:hover {
     transition: opacity 180ms ease, transform 180ms ease;
 }
 
-.journey-page .calendar-day:hover .calendar-title {
+.calendar-day:hover .calendar-title {
     opacity: 1;
     transform: translateY(0);
 }
 
-.journey-page .calendar-day::after {
-    position: absolute;
-    z-index: 20;
-    inset: 0;
-    content: "";
-    border: 1px solid #111;
-    pointer-events: none;
-}
-
 @media (max-width: 760px) {
-    .journey-page #journey-calendar {
-        grid-template-columns: repeat(2, 1fr);
+    #journey-calendar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .journey-page .calendar-day {
-        min-height: 180px;
+    .calendar-day {
+        min-height: 160px;
     }
 }

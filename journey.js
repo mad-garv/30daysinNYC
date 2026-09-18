@@ -50,23 +50,26 @@ function renderJourneyCards(activities) {
         }
 
         card.innerHTML = `
-            ${!activity || !activity.completed
-                        ? `<span class="calendar-number">${cardNumber}</span>`
-                        : ""
-                    }
+            ${
+                !activity || !activity.completed
+                    ? `<span class="calendar-number">${cardNumber}</span>`
+                    : ""
+            }
 
             <div class="calendar-content">
-                ${activity && activity.completed
+                ${
+                    activity && activity.completed
                         ? activity.image_url
                             ? `<img src="${activity.image_url}" alt="${activity.title}">`
                             : `<div class="image-placeholder">?</div>`
                         : ""
-                    }
+                }
 
-                ${activity && activity.completed
+                ${
+                    activity && activity.completed
                         ? `<p class="calendar-title">${activity.title}</p>`
                         : ""
-                    }
+                }
             </div>
         `;
         journeyCalendar.appendChild(card);
