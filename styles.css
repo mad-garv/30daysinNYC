@@ -577,11 +577,7 @@ nav a:hover {
 @media (max-width: 480px) {
     .activity {
         padding-inline: 7px;
-    }
-
-    .edit-button {
-        display: none;
-    }
+    }    
 
     .activity-description,
     .activity-properties {
@@ -726,4 +722,15 @@ nav a:hover {
 .journey-page .calendar-day:hover .calendar-title {
     opacity: 1;
     transform: translateY(0);
+}
+
+/* Phones and tablets do not have hover, so always show edit controls */
+
+@media (hover: none), (pointer: coarse) {
+    .edit-button {
+        display: grid;
+        flex: 0 0 28px;
+        place-items: center;
+        opacity: 1;
+    }
 }
