@@ -35,29 +35,37 @@ function renderJourneyCards(activities) {
 
     for (let cardNumber = 1; cardNumber <= 30; cardNumber++) {
         const activity = activities.find(
-            activity => activity.id === cardNumber
+            activity => Number(activity.id) === cardNumber
         );
 
         const card = document.createElement("div");
         card.classList.add("calendar-day");
 
+        if (activity && activity.completed) {
+            card.classList.add("is-completed");
+        }
+
+        if (activity && activity.completed && activity.image_url) {
+            card.classList.add("has-image");
+        }
+
         card.innerHTML = `
             <span class="calendar-number">${cardNumber}</span>
 
             <div class="calendar-content">
-                ${
-                    activity && activity.completed
-                        ? `
-                            ${
-                                activity.image_url
-                                    ? `<img src="${activity.image_url}" alt="${activity.title}">`
-                                    : `<div class="image-placeholder">?</div>`
-                            }
-
-                            <p class="calendar-title">${activity.title}</p>
-                        `
-                        : ""
-                }
+            ${
+                activity && activity.completed
+                    ? `
+                        ${
+                            activity.image_url
+                                ? `<img src="${activity.image_url}" alt="${activity.title}">`
+                                : `<div class="image-placeholder">?</div>`
+                        }
+            
+                        <p class="calendar-title">${activity.title}</p>
+                    `
+                    : ""
+            }
             </div>
         `;
 
