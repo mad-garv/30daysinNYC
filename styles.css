@@ -572,7 +572,8 @@ nav a:hover {
     }
 
     .activity-row small {
-        display: none;
+        display: block;
+        font-size: 0.6rem;
     }
 
     #journey-table {
