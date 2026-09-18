@@ -493,14 +493,6 @@ nav a:hover {
     transition: opacity 250ms ease;
 }
 
-.journey-page .calendar-day.is-completed .calendar-number {
-    opacity: 0.22;
-}
-
-.journey-page .calendar-day.has-image .calendar-number {
-    opacity: 0.35;
-}
-
 .journey-page .calendar-content {
     position: absolute;
     z-index: 2;
@@ -549,6 +541,15 @@ nav a:hover {
 .journey-page .calendar-day:hover .calendar-title {
     opacity: 1;
     transform: translateY(0);
+}
+
+.journey-page .calendar-day::after {
+    position: absolute;
+    z-index: 20;
+    inset: 0;
+    content: "";
+    border: 1px solid #111;
+    pointer-events: none;
 }
 
 @media (max-width: 760px) {
