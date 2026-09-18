@@ -3,8 +3,6 @@ const supabaseKey = "sb_publishable_9uXJEvQ9XvIYvwzrThTy9Q_s1CKhWcO";
 
 const db = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-const journeyDays = 30;
-
 async function checkSession() {
     const { data, error } = await db.auth.getSession();
 
@@ -13,68 +11,58 @@ async function checkSession() {
         return;
     }
 
-    renderJourneyCards();
-    getCompletedActivities();
+    getActivities();
 }
 
-async function getCompletedActivities() {
+async function getActivities() {
     const { data, error } = await db
         .from("activities")
         .select("*")
-        .eq("completed", true)
-        .not("journey_order", "is", null)
-        .order("journey_order", { ascending: true });
+        .order("id", { ascending: true });
 
     if (error) {
-        console.error("Error fetching completed activities:", error);
+        console.error("Error fetching activities:", error);
         return;
     }
 
-    renderCompletedActivities(data);
+    renderJourneyCards(data);
 }
 
-function renderJourneyCards() {
+function renderJourneyCards(activities) {
     const journeyCalendar = document.getElementById("journey-calendar");
 
     journeyCalendar.innerHTML = "";
 
-    for (let i = 1; i <= journeyDays; i++) {
-        const card = document.createElement("div");
+    for (let cardNumber = 1; cardNumber <= 30; cardNumber++) {
+        const activity = activities.find(
+            activity => activity.id === cardNumber
+        );
 
+        const card = document.createElement("div");
         card.classList.add("calendar-day");
-        card.dataset.order = i;
 
         card.innerHTML = `
-            <span class="calendar-number">${i}</span>
-            <div class="calendar-content"></div>
+            <span class="calendar-number">${cardNumber}</span>
+
+            <div class="calendar-content">
+                ${
+                    activity && activity.completed
+                        ? `
+                            ${
+                                activity.image_url
+                                    ? `<img src="${activity.image_url}" alt="${activity.title}">`
+                                    : `<div class="image-placeholder">?</div>`
+                            }
+
+                            <p class="calendar-title">${activity.title}</p>
+                        `
+                        : ""
+                }
+            </div>
         `;
 
         journeyCalendar.appendChild(card);
     }
-}
-
-function renderCompletedActivities(activities) {
-    activities.forEach(activity => {
-        const card = document.querySelector(
-            `.calendar-day[data-order="${activity.journey_order}"]`
-        );
-
-        if (!card) {
-            return;
-        }
-
-        const content = card.querySelector(".calendar-content");
-
-        content.innerHTML = `
-            ${
-                activity.image_url
-                    ? `<img src="${activity.image_url}" alt="${activity.title}">`
-                    : `<div class="image-placeholder">?</div>`
-            }
-
-            <p class="calendar-title">${activity.title}</p>
-        `;
-    });
 }
 
 checkSession();
