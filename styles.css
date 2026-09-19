@@ -4,7 +4,7 @@
     --ink: #202543;
     --ink-soft: #555b78;
     --paper: #f8f4ed;
-    --card: #fffdf9;
+    --card: 255 253 249;
     --line: #ded7cc;
     --coral: #ef715f;
     --coral-dark: #cf5545;
@@ -28,6 +28,20 @@ body {
         radial-gradient(circle at bottom left, rgba(167, 198, 232, 0.35), transparent 30rem),
         var(--paper);
     font-family: "DM Sans", sans-serif;
+}
+
+body::before {
+    position: fixed;
+    z-index: -1;
+    inset: 0;
+    content: "";
+    pointer-events: none;
+
+    background-image: url("nyc-header.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: min(75vw, 760px);
+    opacity: 0.8;
 }
 
 h1 {
@@ -80,8 +94,8 @@ nav a {
 }
 
 nav a:hover {
-    color: var(--ink);
-    background: var(--gold);
+    color: var(--paper);
+    background: var(--coral);
     transform: translateY(-1px);
 }
 
@@ -134,7 +148,7 @@ nav a:hover {
 
 .edit-button:hover {
     color: var(--ink);
-    background: var(--gold);
+    background: var(--coral);
 }
 
 .activity-checkbox {
@@ -242,7 +256,7 @@ nav a:hover {
     width: min(400px, 100%);
     padding: 30px;
     border-radius: 22px;
-    background: var(--card);
+    background: rgb(var(--card) / 0.50);
     box-shadow: 0 20px 60px rgba(15, 18, 35, 0.28);
 }
 
@@ -305,7 +319,7 @@ nav a:hover {
     padding: 30px;
     border: 1px solid rgba(255, 255, 255, 0.55);
     border-radius: 22px;
-    background: var(--card);
+    background: rgb(var(--card) / 0.8);
     box-shadow: 0 20px 60px rgba(15, 18, 35, 0.28);
 }
 
@@ -395,11 +409,11 @@ nav a:hover {
 }
 
 .cancel-edit:hover {
-    background: var(--gold);
+    background: var(--coral);
 }
 
 .save-edit {
-    color: var(--card);
+    color: rgb(var(--card) / 1);
     background: var(--ink);
 }
 
@@ -454,7 +468,7 @@ nav a:hover {
     overflow: hidden;
     border: 1px solid var(--ink);
     border-radius: 16px;
-    background: var(--card);
+    background: rgb(var(--card) / 0.1);
     transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
@@ -529,4 +543,12 @@ nav a:hover {
     .calendar-day {
         min-height: 160px;
     }
+}
+
+.site-header {
+    display: block;
+    width: 400px;
+    max-width: 90%;
+    height: auto;
+    margin: 0 auto 30px;
 }
