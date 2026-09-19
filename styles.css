@@ -41,7 +41,7 @@ body::before {
     background-repeat: no-repeat;
     background-position: center;
     background-size: min(75vw, 760px);
-    opacity: 0.8;
+    opacity: 0;
 }
 
 h1 {
@@ -436,7 +436,7 @@ nav a:hover {
     body::before {
         background-position: center 38%;
         background-size: 112vw auto;
-        opacity: 0.055;
+        opacity: 0;
     }
 }
 
