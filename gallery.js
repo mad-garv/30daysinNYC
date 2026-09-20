@@ -25,13 +25,13 @@ async function getActivities() {
         return;
     }
 
-    renderJourneyCards(data);
+    renderGalleryCards(data);
 }
 
-function renderJourneyCards(activities) {
-    const journeyCalendar = document.getElementById("journey-calendar");
+function renderGalleryCards(activities) {
+    const galleryGrid = document.getElementById("gallery-grid");
 
-    journeyCalendar.innerHTML = "";
+    galleryGrid.innerHTML = "";
 
     for (let cardNumber = 1; cardNumber <= 30; cardNumber++) {
         const activity = activities.find(
@@ -39,7 +39,7 @@ function renderJourneyCards(activities) {
         );
 
         const card = document.createElement("div");
-        card.classList.add("calendar-day");
+        card.classList.add("grid-day");
 
         if (activity && activity.completed) {
             card.classList.add("is-completed");
@@ -52,11 +52,11 @@ function renderJourneyCards(activities) {
         card.innerHTML = `
             ${
                 !activity || !activity.completed
-                    ? `<span class="calendar-number">${cardNumber}</span>`
+                    ? `<span class="grid-number">${cardNumber}</span>`
                     : ""
             }
 
-            <div class="calendar-content">
+            <div class="grid-content">
                 ${
                     activity && activity.completed
                         ? activity.image_url
@@ -67,12 +67,12 @@ function renderJourneyCards(activities) {
 
                 ${
                     activity && activity.completed
-                        ? `<p class="calendar-title">${activity.title}</p>`
+                        ? `<p class="grid-title">${activity.title}</p>`
                         : ""
                 }
             </div>
         `;
-        journeyCalendar.appendChild(card);
+        galleryGrid.appendChild(card);
     }
 }
 

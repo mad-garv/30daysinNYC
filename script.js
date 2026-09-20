@@ -346,4 +346,25 @@ async function uploadActivityImage(activityId) {
     input.click();
 }
 
+const nav = document.querySelector("nav");
+
+if (nav) {
+    nav.addEventListener("click", function (event) {
+        if (!window.matchMedia("(hover: none) and (pointer: coarse)").matches) {
+            return;
+        }
+
+        if (!nav.classList.contains("is-open")) {
+            event.preventDefault();
+            nav.classList.add("is-open");
+        }
+    });
+
+    document.addEventListener("click", function (event) {
+        if (!nav.contains(event.target)) {
+            nav.classList.remove("is-open");
+        }
+    });
+}
+
 checkSession();
