@@ -76,11 +76,6 @@ async function getActivities() {
 }
 
 function renderActivities(activities) {
-    if (!window.isLoggedIn) {
-        editButton.style.display = "none";
-        checkbox.disabled = true;
-    }
-
     const activitiesList = document.getElementById("activities-list");
 
     activitiesList.innerHTML = "";
@@ -120,6 +115,11 @@ function renderActivities(activities) {
         const title = activityElement.querySelector(".activity-title");
         const description = activityElement.querySelector(".activity-description");
         const editButton = activityElement.querySelector(".edit-button");
+
+        if (!window.isLoggedIn) {
+            editButton.style.display = "none";
+            checkbox.disabled = true;
+        }
 
         checkbox.addEventListener("change", async () => {
             if (!window.isLoggedIn) {
