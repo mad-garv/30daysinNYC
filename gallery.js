@@ -10,8 +10,7 @@ let activeCarouselActivityId = null;
 async function checkSession() {
     const { data, error } = await db.auth.getSession();
 
-    if (error || !data.session) {
-        window.location.href = "login.html";
+    if (error) {        
         return;
     }
 

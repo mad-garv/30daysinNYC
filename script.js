@@ -8,6 +8,40 @@ const db = window.supabase.createClient(
 
 const MAX_IMAGES_PER_ACTIVITY = 6;
 
+function renderNav(isLoggedIn) {
+    const nav = document.querySelector("#site-nav");
+
+    if (!nav) {
+        return;
+    }
+
+    nav.innerHTML = `
+        ${
+            !isLoggedIn
+                ? `<a href="login.html">Login</a>`
+                : ""
+        }
+
+        <a href="index.html">Checklist</a>
+        <a href="gallery.html">Gallery</a>
+    `;
+
+    if (window.matchMedia("(hover: none) and (pointer: coarse)").matches) {
+        nav.addEventListener("click", function (event) {
+            if (!nav.classList.contains("is-open")) {
+                event.preventDefault();
+                nav.classList.add("is-open");
+            }
+        });
+    
+        document.addEventListener("click", function (event) {
+            if (!nav.contains(event.target)) {
+                nav.classList.remove("is-open");
+            }
+        });
+    }
+}
+
 async function checkSession() {
     const { data, error } = await db.auth.getSession();
 
@@ -16,13 +50,13 @@ async function checkSession() {
         return;
     }
 
-    if (data.session) {
-        console.log("User is logged in:", data.session.user.email);
-        getActivities();
-    } else {
-        console.log("No active session.");
-        window.location.href = "login.html";
-    }
+    const isLoggedIn = Boolean(data.session);
+
+    window.isLoggedIn = isLoggedIn;
+
+    renderNav(isLoggedIn);
+
+    getActivities();
 }
 
 async function getActivities() {
@@ -42,6 +76,11 @@ async function getActivities() {
 }
 
 function renderActivities(activities) {
+    if (!window.isLoggedIn) {
+        editButton.style.display = "none";
+        checkbox.disabled = true;
+    }
+
     const activitiesList = document.getElementById("activities-list");
 
     activitiesList.innerHTML = "";
@@ -83,6 +122,11 @@ function renderActivities(activities) {
         const editButton = activityElement.querySelector(".edit-button");
 
         checkbox.addEventListener("change", async () => {
+            if (!window.isLoggedIn) {
+                checkbox.checked = activity.completed;
+                return;
+            }
+
             const saved = await updateActivity(activity.id, checkbox.checked);
 
             if (saved && checkbox.checked) {
@@ -95,6 +139,10 @@ function renderActivities(activities) {
         });
 
         editButton.addEventListener("click", () => {
+            if (!window.isLoggedIn) {
+                return;
+            }
+
             openEditPopup(activity);
         });
 
@@ -366,27 +414,6 @@ async function uploadActivityImage(activityId) {
     });
 
     input.click();
-}
-
-const nav = document.querySelector("nav");
-
-if (nav) {
-    nav.addEventListener("click", function (event) {
-        if (!window.matchMedia("(hover: none) and (pointer: coarse)").matches) {
-            return;
-        }
-
-        if (!nav.classList.contains("is-open")) {
-            event.preventDefault();
-            nav.classList.add("is-open");
-        }
-    });
-
-    document.addEventListener("click", function (event) {
-        if (!nav.contains(event.target)) {
-            nav.classList.remove("is-open");
-        }
-    });
 }
 
 checkSession();
