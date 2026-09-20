@@ -6,6 +6,8 @@ const db = window.supabase.createClient(
     supabaseKey
 );
 
+const MAX_IMAGES_PER_ACTIVITY = 6;
+
 async function checkSession() {
     const { data, error } = await db.auth.getSession();
 
@@ -122,28 +124,95 @@ async function updateActivity(id, completed) {
     return true;
 }
 
-async function uploadImageFile(activityId, file) {
-    const { data: sessionData } = await db.auth.getSession();
+async function uploadImageFiles(activityId, files) {
+    const selectedFiles = Array.from(files);
 
-    const userId = sessionData.session.user.id;
-    const extension = file.name.split(".").pop();
-    const filePath = `${userId}/${activityId}-${Date.now()}.${extension}`;
-
-    const { error: uploadError } = await db.storage
-        .from("activity-images")
-        .upload(filePath, file);
-
-    if (uploadError) {
-        console.error("Error uploading image:", uploadError);
-        alert(`Could not upload image: ${uploadError.message}`);
-        return null;
+    if (selectedFiles.length === 0) {
+        return;
     }
 
-    const { data } = db.storage
-        .from("activity-images")
-        .getPublicUrl(filePath);
+    const { data: existingImages, error: existingImagesError } = await db
+        .from("activity_images")
+        .select("id, sort_order")
+        .eq("activity_id", activityId)
+        .order("sort_order", { ascending: true });
 
-    return data.publicUrl;
+    if (existingImagesError) {
+        throw existingImagesError;
+    }
+
+    if (existingImages.length + selectedFiles.length > MAX_IMAGES_PER_ACTIVITY) {
+        throw new Error(
+            `You can add up to ${MAX_IMAGES_PER_ACTIVITY} images per activity.`
+        );
+    }
+
+    const { data: sessionData } = await db.auth.getSession();
+    const userId = sessionData.session.user.id;
+
+    const lastSortOrder = existingImages.length
+        ? existingImages[existingImages.length - 1].sort_order
+        : -1;
+
+    const uploadedPaths = [];
+    const insertedImageIds = [];
+
+    try {
+        for (const [index, file] of selectedFiles.entries()) {
+            const extension = file.name.split(".").pop();
+            const filePath =
+                `${userId}/${activityId}/${crypto.randomUUID()}.${extension}`;
+
+            const { error: uploadError } = await db.storage
+                .from("activity-images")
+                .upload(filePath, file);
+
+            if (uploadError) {
+                throw uploadError;
+            }
+
+            uploadedPaths.push(filePath);
+
+            const { data: urlData } = db.storage
+                .from("activity-images")
+                .getPublicUrl(filePath);
+
+            const { data: insertedImage, error: insertError } = await db
+                .from("activity_images")
+                .insert({
+                    activity_id: activityId,
+                    image_url: urlData.publicUrl,
+                    sort_order: lastSortOrder + index + 1
+                })
+                .select("id")
+                .single();
+
+            if (insertError) {
+                throw insertError;
+            }
+
+            insertedImageIds.push(insertedImage.id);
+        }
+    } catch (error) {
+        /*
+         * Compensation cleanup:
+         * remove only records/files created in this attempted upload.
+         */
+        if (insertedImageIds.length) {
+            await db
+                .from("activity_images")
+                .delete()
+                .in("id", insertedImageIds);
+        }
+
+        if (uploadedPaths.length) {
+            await db.storage
+                .from("activity-images")
+                .remove(uploadedPaths);
+        }
+
+        throw error;
+    }
 }
 
 function openEditPopup(activity) {
@@ -180,29 +249,16 @@ function openEditPopup(activity) {
             </label>         
             
             <label>
-                Change photo
+                Add photos
                 <input
                     type="file"
-                    id="edit-image"
+                    id="edit-images"
                     accept="image/*"
+                    multiple
                 >
             </label>
 
-            ${activity.image_url
-            ? `
-                        <img
-                            class="edit-image-preview"
-                            src="${activity.image_url}"
-                            alt="${activity.title}"
-                        >
-
-                        <label class="remove-image-label">
-                            <input type="checkbox" id="remove-image">
-                            Remove current photo
-                        </label>
-                    `
-            : ""
-        }
+            
 
             <div class="edit-popup-buttons">
                 <button class="cancel-edit">Cancel</button>
@@ -221,22 +277,7 @@ function openEditPopup(activity) {
         const title = popup.querySelector("#edit-title").value;
         const description = popup.querySelector("#edit-description").value;
         const completedDate = popup.querySelector("#edit-date").value;
-        const imageFile = popup.querySelector("#edit-image").files[0];
-        const removeImage = popup.querySelector("#remove-image")?.checked;
-
-        let imageUrl = activity.image_url;
-
-        if (removeImage) {
-            imageUrl = null;
-        }
-
-        if (imageFile) {
-            imageUrl = await uploadImageFile(activity.id, imageFile);
-
-            if (!imageUrl) {
-                return;
-            }
-        }
+        const imageFiles = popup.querySelector("#edit-images").files;
 
         const { error } = await db
             .from("activities")
@@ -244,13 +285,20 @@ function openEditPopup(activity) {
                 title: title.trim(),
                 description: description.trim(),
                 completed: Boolean(completedDate),
-                completed_date: completedDate || null,
-                image_url: imageUrl
+                completed_date: completedDate || null
             })
             .eq("id", activity.id);
 
         if (error) {
             console.error("Error saving activity:", error);
+            return;
+        }
+
+        try {
+            await uploadImageFiles(activity.id, imageFiles);
+        } catch (error) {
+            console.error("Error adding photos:", error);
+            alert(`Activity details were saved, but photos were not added: ${error.message}`);
             return;
         }
 
@@ -275,7 +323,7 @@ function openImageChoice(activityId) {
         <div class="image-choice-popup">
             <p class="eyebrow">Activity complete</p>
             <h2>Add a memory?</h2>
-            <p>Upload a photo now, or come back to it later from your Supabase row.</p>
+            <p>Upload a photo now, or come back to it later.</p>
 
             <div class="edit-popup-buttons">
                 <button class="later-button">Later</button>
@@ -301,46 +349,20 @@ async function uploadActivityImage(activityId) {
 
     input.type = "file";
     input.accept = "image/*";
+    input.multiple = true;
 
     input.addEventListener("change", async () => {
-        const file = input.files[0];
-
-        if (!file) {
+        if (input.files.length === 0) {
             return;
         }
 
-        const { data: sessionData } = await db.auth.getSession();
-        const userId = sessionData.session.user.id;
-
-        const extension = file.name.split(".").pop();
-        const filePath = `${userId}/${activityId}-${Date.now()}.${extension}`;
-
-        const { error: uploadError } = await db.storage
-            .from("activity-images")
-            .upload(filePath, file);
-
-        if (uploadError) {
-            console.error("Error uploading image:", uploadError);
-            return;
+        try {
+            await uploadImageFiles(activityId, input.files);
+            getActivities();
+        } catch (error) {
+            console.error("Error uploading photos:", error);
+            alert(`Could not add photos: ${error.message}`);
         }
-
-        const { data: urlData } = db.storage
-            .from("activity-images")
-            .getPublicUrl(filePath);
-
-        const { error: updateError } = await db
-            .from("activities")
-            .update({
-                image_url: urlData.publicUrl
-            })
-            .eq("id", activityId);
-
-        if (updateError) {
-            console.error("Error saving image URL:", updateError);
-            return;
-        }
-
-        getActivities();
     });
 
     input.click();
