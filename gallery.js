@@ -10,7 +10,7 @@ let activeCarouselActivityId = null;
 async function checkSession() {
     const { data, error } = await db.auth.getSession();
 
-    if (error) {        
+    if (error) {
         return;
     }
 
@@ -37,28 +37,8 @@ async function getActivities() {
     }
 
     const activitiesWithImages = data.map(activity => {
-        const relationalImages = [...(activity.activity_images || [])]
+        const images = [...(activity.activity_images || [])]
             .sort((a, b) => a.sort_order - b.sort_order);
-
-        /*
-         * Temporary backward compatibility:
-         * if a legacy URL exists but was not migrated for some reason,
-         * show it first rather than silently losing it.
-         */
-        const hasMigratedLegacyImage = relationalImages.some(
-            image => image.image_url === activity.image_url
-        );
-
-        const images = activity.image_url && !hasMigratedLegacyImage
-            ? [
-                {
-                    id: `legacy-${activity.id}`,
-                    image_url: activity.image_url,
-                    sort_order: -1
-                },
-                ...relationalImages
-            ]
-            : relationalImages;
 
         galleryImagesByActivityId.set(activity.id, images);
 
@@ -101,20 +81,18 @@ function renderGalleryCards(activities) {
         const currentImage = images[currentIndex];
 
         card.innerHTML = `
-            ${
-                !activity || !activity.completed
-                    ? `<span class="grid-number">${cardNumber}</span>`
-                    : ""
+            ${!activity || !activity.completed
+                ? `<span class="grid-number">${cardNumber}</span>`
+                : ""
             }
 
             <div class="grid-content">
-                ${
-                    activity?.completed
-                        ? images.length === 0
-                            ? `<div class="image-placeholder">?</div>`
-                            : images.length === 1
-                                ? `<img src="${currentImage.image_url}" alt="${activity.title}">`
-                                : `
+                ${activity?.completed
+                ? images.length === 0
+                    ? `<div class="image-placeholder">?</div>`
+                    : images.length === 1
+                        ? `<img src="${currentImage.image_url}" alt="${activity.title}">`
+                        : `
                                     <div
                                         class="grid-carousel"
                                         data-activity-id="${activity.id}"
@@ -142,14 +120,13 @@ function renderGalleryCards(activities) {
                                         </button>
                                     </div>
                                 `
-                        : ""
-                }
+                : ""
+            }
 
-                ${
-                    activity?.completed
-                        ? `<p class="grid-title">${activity.title}</p>`
-                        : ""
-                }
+                ${activity?.completed
+                ? `<p class="grid-title">${activity.title}</p>`
+                : ""
+            }
             </div>
         `;
 
