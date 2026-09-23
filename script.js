@@ -72,7 +72,25 @@ async function getActivities() {
 
     console.log("Activities:", data);
 
+    updateProgressBar(data);
+
     renderActivities(data);
+}
+
+function updateProgressBar(activities) {
+    const progressFill = document.querySelector(".progress-fill");
+    const progressText = document.querySelector(".progress-text");
+
+    if (!progressFill || !progressText || !activities.length) return;
+
+    const completedCount = activities.filter(
+        activity => activity.completed
+    ).length;
+
+    const progress = (completedCount / activities.length) * 100;
+
+    progressFill.style.width = `${progress}%`;
+    progressText.textContent = `${completedCount}/${activities.length}`;
 }
 
 function renderActivities(activities) {
